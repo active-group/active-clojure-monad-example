@@ -36,6 +36,6 @@
 
 (defn state-run-monad
   [m]
-  (first (monad/execute-free-reader-state-exception
+  (first (monad/execute-monadic
           (state-command-config {1 (address/make-address 1 "Marcus" "Tübingen")})
           m)))

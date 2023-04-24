@@ -33,6 +33,12 @@
     :else
     monad/unknown-command))
 
+(defn database-monad-command-config
+  [db]
+  (monad/make-monad-command-config database-run-command
+                                   {::db-spec db}
+                                   {}))
+
 (defn database-run-monad
   [m]
   (let [initial-address-book-database
@@ -41,7 +47,7 @@
         {:classname "org.h2.Driver"
          :subprotocol "h2"
          :subname (str "mem:demonad")}]
-    (jdbc/with-db-connection [conn db]
+    (jdbc/with-db-connection [_conn db]
       (jdbc/db-do-commands
        db
        (jdbc/create-table-ddl :addresses
@@ -51,8 +57,6 @@
                               {:conditional? true}))
       (jdbc/insert-multi! db :addresses
                           (map #(into {} %) initial-address-book-database))
-      (first (monad/execute-free-reader-state-exception
-              (monad/make-monad-command-config database-run-command
-                                               db
-                                               initial-address-book-database)
-              m)))))
+      (first (monad/execute-monadic
+               (database-monad-command-config db)
+               m)))))
