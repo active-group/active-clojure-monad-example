@@ -8,21 +8,21 @@
   "Run a monadic address book program -- with state as simple backend storage."
   [run env state m]
   (cond
-    (lang/put? m)
-    (let [address (lang/put-address m)]
+    (lang/put-address? m)
+    (let [address (lang/put-address-address m)]
       [true
        (assoc state (address/address-id address) address)])
 
-    (lang/get? m)
-    [(get state (lang/get-id m))
+    (lang/get-address? m)
+    [(get state (lang/get-address-id m))
      state]
 
-    (lang/delete? m)
+    (lang/delete-address? m)
     [true
-     (dissoc state (address/address-id (lang/delete-address m)))]
+     (dissoc state (lang/delete-address-id m))]
 
-    (lang/filter? m)
-    [(filter (lang/filter-predicate? m) (vals state))
+    (lang/filter-addresses? m)
+    [(filter (lang/filter-addresses-predicate? m) (vals state))
      state]
 
     :else

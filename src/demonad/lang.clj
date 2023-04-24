@@ -5,47 +5,53 @@
             [demonad.address :as address]))
 
 (define-record-type
-  ^{:doc "Put an address into the Address book"}
-  Put
-  (put address)
-  put?
-  [^{:doc "Address to put into the Address book"}
-   address put-address])
+  ^{:doc "Put an address into the address book"}
+  PutAddress
+  (put-address address)
+  put-address?
+  [^{:doc "Address to put into the address book"}
+   address put-address-address])
 
 (define-record-type
   ^{:doc "Get an address from the address book"}
-  Get
-  (get id)
-  get?
-  [^{:doc "Id of the address to get from the address book"}
-   id get-id])
+  GetAddress
+  (get-address id)
+  get-address?
+  [^{:doc "ID of the address to get from the address book"}
+   id get-address-id])
 
 (define-record-type
   ^{:doc "Delete an address from the address book"}
-  Delete
-  (delete address)
-  delete?
-  [^{:doc "Adress to delete from the address book"}
-   address delete-address])
+  DeleteAddress
+  (delete-address id)
+  delete-address?
+  [^{:doc "ID of the Address to delete from the address book"}
+   id delete-address-id])
 
 (define-record-type
   ^{:doc "Filter the address book"}
-  Filter
-  (filter predicate?)
-  filter?
+  FilterAddresses
+  (filter-addresses predicate?)
+  filter-addresses?
   [^{:doc "Predicate to filter the address book"}
-   predicate? filter-predicate?])
+   predicate? filter-addresses-predicate?])
 
-(defn get-all
+(defn get-all-addresses
   "Return a list of all addresses in the address book"
   []
   (->
-   (filter (constantly true))
+   (filter-addresses (constantly true))
    (monad/reify-as (list 'get-all))))
 
-(defn remove-tübingen
+(defn in-tübingen?
+  "Is a given address in Tübingen?"
+  [address]
+  (= "Tübingen" (address/address-town address)))
+
+
+(defn remove-addresses-in-tübingen
   "Remove all addresses that are located in Tübingen."
   []
   (monad/monadic
-   [tübinger (filter (fn [addr] (= "Tübingen" (address/address-town addr))))]
-   (monad/sequ_ (map delete tübinger))))
+   [tübinger (filter-addresses in-tübingen?)]
+   (monad/sequ_ (map (fn [address] (delete-address (address/address-id address))) tübinger))))
