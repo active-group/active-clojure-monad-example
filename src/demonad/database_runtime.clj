@@ -5,30 +5,40 @@
             [active.clojure.monad :as monad]
             [clojure.java.jdbc :as jdbc]))
 
+(defn put-address
+  [db-spec address]
+  (jdbc/insert! db-spec "addresses" (into {} address)))
+
+(defn delete-address
+  [db-spec id]
+  (jdbc/delete! db-spec "addresses" ["id = ?" id]))
+
+(defn get-address
+  [db-spec id]
+  (first (jdbc/query db-spec ["SELECT * FROM addresses where id = ?" id]
+                     {:row-fn address/map->Address})))
+
+(defn filter-addresses
+  [db-spec predicate?]
+  (filter predicate?
+          (jdbc/query db-spec ["SELECT * FROM addresses"]
+                      {:row-fn address/map->Address})))
+
 (defn database-run-command
   "Run a monadic address book program -- with H2 database as backend storage."
-  [run env state m]
+  [_run env state m]
   (cond
-    (lang/put? m)
-    (let [address (lang/put-address m)]
-      [(jdbc/insert! env :addresses (into {} address))
-       state])
+    (lang/put-address? m)
+    [(put-address (::db-spec env) (lang/put-address-address m)) state]
 
-    (lang/get? m)
+    (lang/delete-address? m)
+    [(delete-address (::db-spec env) (lang/delete-address-id m)) state]
 
-    [(first (jdbc/query env ["SELECT * FROM addresses where id = ?" (lang/get-id m)]
-                        {:row-fn address/map->Address}))
-     state]
+    (lang/get-address? m)
+    [(get-address (::db-spec env) (lang/get-address-id m)) state]
 
-    (lang/delete? m)
-    [(jdbc/delete! env :addresses ["id = ?" (address/address-id (lang/delete-address m))])
-     state]
-
-    (lang/filter? m)
-    [(filter (lang/filter-predicate? m)
-             (jdbc/query env ["SELECT * FROM addresses"]
-                         {:row-fn address/map->Address}))
-     state]
+    (lang/filter-addresses? m)
+    [(filter-addresses (::db-spec env) (lang/filter-addresses-predicate? m)) state]
 
     :else
     monad/unknown-command))
