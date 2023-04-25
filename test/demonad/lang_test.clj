@@ -32,7 +32,7 @@
            (lang/put-address (address/make-address 2 "Mike" "Tübingen"))
            (lang/filter-addresses (fn [addr] (= 2 (address/address-id addr)))))))))
 
-(deftest t-get-all
+(deftest t-get-all-addresses
   (is (= 1
          (count
           (mock/mock-run-monad
@@ -40,3 +40,13 @@
            (monad/monadic
             (lang/get-all-addresses)))))))
 
+(deftest t-remove-addresses-in-tübingen
+  (is (nil?
+       (mock/mock-run-monad
+        [(mock/mock lang/filter-addresses?
+                    (constantly (monad/return [(address/make-address 2 "Mike" "Tübingen")])))
+         (mock/mock-result (lang/delete-address 2) true)
+         (mock/mock-result (lang/get-address 2) nil)]
+        (monad/monadic
+         (lang/remove-addresses-in-tübingen)
+         (lang/get-address 2))))))

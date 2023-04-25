@@ -41,17 +41,16 @@
   []
   (->
    (filter-addresses (constantly true))
-   (monad/reify-as (list 'get-all))))
+   (monad/reify-as (list 'get-all-addresses))))
 
 (defn in-tübingen?
   "Is a given address in Tübingen?"
   [address]
   (= "Tübingen" (address/address-town address)))
 
-
 (defn remove-addresses-in-tübingen
   "Remove all addresses that are located in Tübingen."
   []
   (monad/monadic
-   [tübinger (filter-addresses in-tübingen?)]
-   (monad/sequ_ (map (fn [address] (delete-address (address/address-id address))) tübinger))))
+    [tübinger (filter-addresses in-tübingen?)]
+    (monad/sequ_ (map (fn [address] (delete-address (address/address-id address))) tübinger))))
